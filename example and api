@@ -1,0 +1,147 @@
+/* *****  API  ***** */
+/*
+ 
+1.
+ Function.prototype.check({Checker}|[{Checker}],{*})
+ 
+ someFunc.check(someChecker,someData);
+ 
+ {checker} can be of type:
+    string - to check primitive data types:
+       "string","number","boolean"
+    function - to provide more complex checks.
+       array should be checked with Array.isArray
+       user made classes could be checked with instanceof
+       a suitable utility is provided below :  someFunc.check(isInstanceOf(Class),someData)
+ 
+ for someFunc with more than one argument:
+    someFunc.check([check1,check2],data1,data2);
+ 
+ 
+ 
+2.
+ Function.prototype.check.add({Checker})
+ 
+ var funcWithBuiltInChecks =  someFunc.check.add(check1,check2)
+ then: funcWithBuiltInChecks(data1,data2);
+ 
+3.
+ curry style:
+ 
+ someFunc.check.add(check1,check2)(data1,data2)
+ 
+*/
+ 
+ 
+/* *****  Examples  ***** */
+ 
+//some simple functions to work with:
+ 
+//check if arg is an integer
+function isInt(data){
+  return data === parseInt(data, 10)
+}
+//always add 7 to x
+function add7(x){
+  return x + 7;
+}
+ 
+//desired behavior:
+add7(3); //returns -> 10
+ 
+//undesired:
+add7('3'); //returns -> "37"
+//undesired 2:
+add7(5.89); //I want only integers!
+ 
+//an error should be thrown in those situations.
+//this could be solved like this:
+ 
+try{
+  add7.check(isInt,3); //returns -> 10, just as normal add7()
+  add7.check(isInt,5.89); //throws -> Uncaught TypeError: 3 is not passing: isInt
+  add7.check(isInt,'3'); //throws again
+} catch(err){console.log(err.message)}
+ 
+//checkers could be functions (anonyms or not) or type-strings ('string','object','function'...):
+//another simple function:
+function duplicateChar(x){
+  return x + x;
+}
+ 
+try{
+duplicateChar.check('string','4'); //returns -> "44"
+duplicateChar.check('string',4); //throws -> Uncaught TypeError: 4 is not of type: string, without check, this will return 8
+}catch(err){console.log(err.message)}
+ 
+ 
+//more than one checker is possible, just gather the checkers in an array:
+//simple function that add an int to an array and returns the new array
+function addIntToArr(array,int){
+  return array.concat([int]);
+}
+var arr = [7,'8',22];
+//two checks required:  array should be an Array, and int should be an Int
+ 
+try{
+addIntToArr.check([Array.isArray,isInt],arr,5); //returns -> [7, "8", 22, 5]
+addIntToArr.check([Array.isArray,isInt],{0:6,1:'8'},5); //throws -> Uncaught TypeError:  [object Object] is not passing: isArray
+}catch(err){console.log(err.message)}
+ 
+ 
+//it is possible to create a secure function that will always check its arguments:
+//(note that checkers here are not inside an array)
+ 
+var addIntToArrAfterCheck = addIntToArr.check.add(Array.isArray,isInt);
+ 
+//now :
+try{
+addIntToArrAfterCheck(arr,'5'); //will throw again
+}catch(err){console.log(err.message)}
+ 
+//this option provides a nice curry-like styling :
+try{
+add7.check.add(isInt)('1'); //will throw
+}catch(err){console.log(err.message)}
+ 
+ 
+ 
+//it is possible to check user-made classes with a proper function:
+ 
+/**
+ * a utility function to check classes
+ *
+ * @param Class
+ * @returns {Function} that gets @data and returns true if is instance of Constructor
+ */
+var isInstanceOf = function(Class){
+  //hacky implementation, name of function is dynamic so it will be shown in the Error message.
+  //see: http://marcosc.com/2012/03/dynamic-function-names-in-javascript/
+  return new Function(
+      "action",
+      "return function isInstanceOf" + getFunctionName(Class) + "(data){ return action(data) };"
+  )(function(data) {return (data instanceof Class)});
+ 
+   //without the evil code (if code quality tools are doing problems):
+  /*
+   return function isInstanceOfClass(data){
+      return (data instanceof Constructor)
+   }
+   */
+};
+//of course this is only a utility, you can create your own functions
+ 
+function Animal(type){
+  this.type = type;
+}
+ 
+function getAnimalType(animal){
+  return "animal type is: "+animal.type;
+}
+ 
+var pingy = new Animal('Penguin');
+ 
+try{
+  getAnimalType.check(isInstanceOf(Animal),pingy); //returns -> animal type is: Penguin
+  getAnimalType.check(isInstanceOf(Animal),{type:'Car'}); //throws -> : [object Object] is not passing isInstanceOfAnimal check
+}catch(err){console.log(err.message)}
