@@ -24,7 +24,7 @@ add7('3'); //returns -> "37"
 
 ### options:
 
-#### predefined checkers:
+##### predefined checkers:
  
 ````
 function isInteger(data){
@@ -34,22 +34,22 @@ add7.check(isInteger,3.4); // Uncaught TypeError: 3.4 is not passing isInteger c
 ````
 
 
-#### Multiple argumets checks
+##### Multiple argumets checks
 
 ````
 someFunc(['boolean', Array.isArray, isInteger], true, [23,4,5], 3);
 ````
 
-#### Create a new safe function from your unsafe function, with built-in checks
+##### Create a new safe function from your unsafe function, with built-in checks
 
 ````
 add7OnlyToInts = add7.check.add(isInteger)
 add7OnlyToInts(3.4) //throws
 ````
 
-#### Curry-style your checks:
+##### Curry-style your checks:
 ````
 add7.check.add(isInteger)(3.4)
 ````
 
-Read Api_and_example.js for more details.
+#### Read Api_and_example.js for more details.
