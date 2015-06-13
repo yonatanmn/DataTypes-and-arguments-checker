@@ -6,7 +6,7 @@ This makes javascript functions to accept static types rather than dynamic, and 
 
 ### example:
 
-`
+````
 function add7(x){
   return x + 7;
 }
@@ -19,7 +19,7 @@ add7('3'); //returns -> "37"
 
 //solution:
   add7.check('number','3');  //will throw an error
-`
+````
 
 ### options:
 
